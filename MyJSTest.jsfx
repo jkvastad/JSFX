@@ -1,0 +1,40 @@
+// This effect Copyright (C) 2004 and later Cockos Incorporated
+// License: LGPL - http://www.gnu.org/licenses/lgpl.html
+
+desc: MyJSTest
+//tags: analysis generator synthesis
+//author: Cockos
+
+slider1:-12<-120,6,1>Wet Mix (dB)
+slider3:440<20,5000,1>Base Frequency (Hz)
+
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output
+
+@slider
+  vol=2 ^ (slider1/6); 
+  adj = 2.0*$pi*slider3/srate;
+  adj2 = 2.0*$pi*(3/2)*slider3/srate;
+  adj3 = 2.0*$pi*(5/4)*slider3/srate;
+
+@sample
+tone = cos(pos);
+tone2 = cos(pos2);
+tone3 = cos(pos3);
+
+tone *= vol;
+tone2 *= vol;
+tone3 *= vol;
+spl0 = spl1 = tone;
+spl0 = spl1 = spl0 + tone2;
+spl0 = spl1 = spl0 + tone3;
+
+
+pos=pos+adj;
+pos2=pos2+adj2;
+pos3=pos3+adj3;
+(pos >= 2.0*$pi) ? pos -= 2.0*$pi;
+(pos2 >= 2.0*$pi) ? pos2 -= 2.0*$pi;
+(pos3 >= 2.0*$pi) ? pos3 -= 2.0*$pi;
