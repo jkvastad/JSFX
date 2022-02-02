@@ -1,0 +1,73 @@
+//Add text files with exactly 128 lines into REAPER/Data/jk_tunings to define your tuning, one floating point number per line.
+//Author: jkvastad
+
+desc: Custom Tone Polysynth
+
+slider1:-24<-120,6,1>Volume (dB)
+slider2:/jk_tunings:none:Tuning System
+
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output
+
+
+@init
+bufferSize = 128;
+frequency = 0;
+waveOut = frequency + bufferSize;
+wavePosition = waveOut + bufferSize;
+positionAdjustment = wavePosition + bufferSize;
+playedKey = positionAdjustment + bufferSize;
+pitchVelocity = playedKey + bufferSize;
+
+
+@block
+while (midirecv(sampleNumber,status,pitch,velocity)) (
+   status==$x90 && velocity!=0 ? (
+     playedKey[pitch] = 1;
+     pitchVelocity[pitch] = velocity;) 
+   : status==$x80 ? playedKey[pitch] = 0
+   : midisend(sampleNumber,status,pitch,velocity);
+);
+
+
+@slider
+tuningFile != slider2 ?
+(
+  tuningFile = slider2;
+  rowNumber = 0;
+  fileHandle = file_open(slider2);
+  fileHandle > 0 && file_text(fileHandle) ?
+  (
+    while
+    (
+      file_var(fileHandle,frequency[rowNumber]);
+      file_avail(fileHandle) ? rowNumber += 1;
+    );
+    file_close(fileHandle);
+  );
+);
+
+vol=2 ^ (slider1/6); 
+
+i = 0;
+loop(bufferSize,
+  positionAdjustment[i] = 2.0*$pi*frequency[i]/srate;
+  i += 1;
+);
+
+
+@sample
+i = 0;
+loop(bufferSize,
+  playedKey[i] || abs(waveOut[i]) > 0.0001 ? (
+    waveOut[i] = sin(wavePosition[i]) * vol*(pitchVelocity[i]/128);
+    wavePosition[i] = wavePosition[i] + positionAdjustment[i];
+    (wavePosition[i] >= 2.0*$pi) ? wavePosition[i] -= 2.0*$pi;) 
+  : (
+    waveOut[i] = 0;
+    wavePosition[i] = 0;);
+  spl0 = spl1 = spl0 + waveOut[i];
+  i+=1;
+);
