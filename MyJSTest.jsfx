@@ -9,23 +9,36 @@ out_pin:left output
 out_pin:right output
 
 @init
-tone = 0;
-pos = 3;
-adj = 6;
+waveOut = 0;
+wavePosition = 3;
+waveAdjustment = 6;
+waveOn = 9;
+waveOn[0] = 1;
+waveOn[1] = 1;
+waveOn[2] = 1;
+
+@block
+while (midirecv(sampleNumber,status,pitch,velocity)) (
+   status==$x90 && velocity!=0 ? waveOn[0] = 1 
+   : status==$x80 ? waveOn[0] = 0
+   : midisend(sampleNumber,status,pitch,velocity);
+);
 
 @slider
-  vol=2 ^ (slider1/6); 
-  adj[0] = 2.0*$pi*slider3/srate;
-  adj[1] = 2.0*$pi*(3/2)*slider3/srate;
-  adj[2] = 2.0*$pi*(5/4)*slider3/srate;
+vol=2 ^ (slider1/6); 
+waveAdjustment[0] = 2.0*$pi*slider3/srate;
+waveAdjustment[1] = 2.0*$pi*(3/2)*slider3/srate;
+waveAdjustment[2] = 2.0*$pi*(5/4)*slider3/srate;
 
 @sample
 i = 0;
 loop(3,
-  tone[i] = cos(pos[i]);
-  tone[i] *= vol;
-  spl0 = spl1 = spl0 + tone[i];
-  pos[i]=pos[i]+ adj[i];
-  (pos[i] >= 2.0*$pi) ? pos[i] -= 2.0*$pi;
+  waveOn[i] ? (
+  waveOut[i] = cos(wavePosition[i])*vol;
+  wavePosition[i]=wavePosition[i]+ waveAdjustment[i];
+  (wavePosition[i] >= 2.0*$pi) ? wavePosition[i] -= 2.0*$pi;
+  spl0 = spl1 = spl0 + waveOut[i];
+  ):(
+  spl0 = spl1 = spl0);
   i+=1;
 );
