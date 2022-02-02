@@ -19,8 +19,8 @@ waveOn[2] = 1;
 
 @block
 while (midirecv(sampleNumber,status,pitch,velocity)) (
-   status==$x90 && velocity!=0 ? waveOn[0] = 1 
-   : status==$x80 ? waveOn[0] = 0
+   status==$x90 && velocity!=0 ? waveOn[pitch] = 1 
+   : status==$x80 ? waveOn[pitch] = 0
    : midisend(sampleNumber,status,pitch,velocity);
 );
 
@@ -33,7 +33,7 @@ waveAdjustment[2] = 2.0*$pi*(5/4)*slider3/srate;
 @sample
 i = 0;
 loop(3,
-  waveOn[i] ? (
+  waveOn[i+60] ? (
   waveOut[i] = cos(wavePosition[i])*vol;
   wavePosition[i]=wavePosition[i]+ waveAdjustment[i];
   (wavePosition[i] >= 2.0*$pi) ? wavePosition[i] -= 2.0*$pi;
