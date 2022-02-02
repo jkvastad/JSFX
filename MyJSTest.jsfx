@@ -1,3 +1,5 @@
+//Add a text file with 128 lines of one float per line into REAPER/Data/jk_tunings to define your tuning
+
 desc: MyJSTest
 
 slider1:-12<-120,6,1>Wet Mix (dB)
@@ -45,7 +47,7 @@ tuningFile != slider2 ?
 
 vol=2 ^ (slider1/6); 
 i = 0;
-loop(3,
+loop(bufferSize,
   waveAdjustment[i] = 2.0*$pi*waveFrequency[i]/srate;
   i += 1;
 );
@@ -53,8 +55,8 @@ loop(3,
 
 @sample
 i = 0;
-loop(3,
-  waveOn[i+60] ? (
+loop(bufferSize,
+  waveOn[i] ? (
   waveOut[i] = cos(wavePosition[i])*vol;
   wavePosition[i]=wavePosition[i]+ waveAdjustment[i];
   (wavePosition[i] >= 2.0*$pi) ? wavePosition[i] -= 2.0*$pi;
