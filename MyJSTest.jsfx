@@ -1,21 +1,22 @@
 desc: MyJSTest
 
 slider1:-12<-120,6,1>Wet Mix (dB)
-slider3:440<20,5000,1>Base Frequency (Hz)
+slider2:/jk_tunings:none:Tuning System
 
 in_pin:left input
 in_pin:right input
 out_pin:left output
 out_pin:right output
 
+
 @init
-waveOut = 0;
-wavePosition = 3;
-waveAdjustment = 6;
-waveOn = 9;
-waveOn[0] = 1;
-waveOn[1] = 1;
-waveOn[2] = 1;
+bufferSize = 128;
+waveFrequency = 0;
+waveOut = waveFrequency + bufferSize;
+wavePosition = waveOut + bufferSize;
+waveAdjustment = wavePosition + bufferSize;
+waveOn = waveAdjustment + bufferSize;
+
 
 @block
 while (midirecv(sampleNumber,status,pitch,velocity)) (
@@ -24,11 +25,31 @@ while (midirecv(sampleNumber,status,pitch,velocity)) (
    : midisend(sampleNumber,status,pitch,velocity);
 );
 
+
 @slider
+tuningFile != slider2 ?
+(
+  tuningFile = slider2;
+  rowNumber = 0;
+  fileHandle = file_open(slider2);
+  fileHandle > 0 && file_text(fileHandle) ?
+  (
+    while
+    (
+      file_var(fileHandle,waveFrequency[rowNumber]);
+      file_avail(fileHandle) ? rowNumber += 1;
+    );
+    file_close(fileHandle);
+  );
+);
+
 vol=2 ^ (slider1/6); 
-waveAdjustment[0] = 2.0*$pi*slider3/srate;
-waveAdjustment[1] = 2.0*$pi*(3/2)*slider3/srate;
-waveAdjustment[2] = 2.0*$pi*(5/4)*slider3/srate;
+i = 0;
+loop(3,
+  waveAdjustment[i] = 2.0*$pi*waveFrequency[i]/srate;
+  i += 1;
+);
+
 
 @sample
 i = 0;
