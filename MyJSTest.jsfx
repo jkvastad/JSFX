@@ -56,12 +56,11 @@ loop(bufferSize,
 @sample
 i = 0;
 loop(bufferSize,
-  waveOn[i] ? (
-  waveOut[i] = cos(wavePosition[i]) * vol;
+  waveOn[i] || abs(waveOut[i]) > 0.0002 ? (
+  waveOut[i] = sin(wavePosition[i]) * vol;
   wavePosition[i] = wavePosition[i] + waveAdjustment[i];
-  (wavePosition[i] >= 2.0*$pi) ? wavePosition[i] -= 2.0*$pi;
-  spl0 = spl1 = spl0 + waveOut[i];)
-  :waveOn[i] > 0.01 ? 
-  :spl0 = spl1 = spl0;
+  (wavePosition[i] >= 2.0*$pi) ? wavePosition[i] -= 2.0*$pi;) 
+  : waveOut[i] = 0;
+  spl0 = spl1 = spl0 + waveOut[i];
   i+=1;
 );
